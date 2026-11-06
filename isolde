@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+case "${1:-}" in
+  "" | shell) ;;
+  *)
+    echo "usage: isolde [shell]" >&2
+    exit 2
+    ;;
+esac
+
+script_dir=$(dirname "$(readlink -f "$0")")
+dir=$(pwd -P)
+base=$(printf %s "$(basename "$dir")" | tr -c 'a-zA-Z0-9_.-' '-' | cut -c1-40)
+name="isolde-${base}-$(printf %s "$dir" | sha256sum | cut -c1-12)"
+
+if [ -z "$(docker ps -q -f "name=^${name}$")" ]; then
+  : "${RDP_PASSWORD:?export RDP_PASSWORD first}"
+  docker volume create --label "isolde.path=$dir" "$name" >/dev/null
+  docker run -d --rm --init --name "$name" --hostname isolde --shm-size=1g \
+    --security-opt "seccomp=$script_dir/seccomp_profile.json" \
+    -e RDP_PASSWORD \
+    -v "$dir:/workspace" \
+    -v "$name:/home/dev" \
+    -p 127.0.0.1::3389 \
+    isolde >/dev/null
+fi
+
+echo "$dir -> RDP at $(docker port "$name" 3389) (user: dev)"
+
+if [ "${1:-}" = shell ]; then
+  exec docker exec -it -e TERM -e COLORTERM -u dev -w /workspace "$name" bash -l
+fi
