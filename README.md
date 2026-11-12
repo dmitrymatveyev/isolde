@@ -1,6 +1,6 @@
 # isolde
 
-A Docker desktop environment you start from any project directory and reach over RDP.
+Per-project Linux desktop in Docker, reached over RDP. Each project directory gets its own persistent home, and the image includes Claude Code, kitty, tmux, Chromium and Playwright.
 
 - The current directory is mounted at `/workspace`.
 - Each directory gets its own home at `/home/dev`, which survives rebuilds.
