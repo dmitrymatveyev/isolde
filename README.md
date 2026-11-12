@@ -12,6 +12,8 @@ A Docker desktop environment you start from any project directory and reach over
 - An RDP client
 - `bash` and `sha256sum` on the host
 
+**Tested on:** only the author's Linux machine so far. Other setups, such as Docker Desktop on macOS or Windows, ARM hosts, or Ubuntu hosts that restrict user namespaces, haven't been tried.
+
 ## Setup
 
 Build the image from this directory. The build arguments give the container user your host UID and GID, so files in `/workspace` have the right owner.
@@ -157,7 +159,7 @@ tmux sessions survive closing `isolde shell` or disconnecting from RDP, so you c
 
 ## Chromium sandbox
 
-`isolde` starts containers with `seccomp_profile.json`, which is Docker's default profile plus one rule allowing `clone`, `setns` and `unshare`. Chromium's sandbox needs these calls to create user namespaces. The file has to stay next to the `isolde` script.
+`isolde` starts containers with `seccomp_profile.json`, which is Docker's default profile plus one rule allowing `clone`, `setns` and `unshare`. Chromium's sandbox needs these calls to create user namespaces. The file has to stay next to the `isolde` script. It's based on Docker's profile from the [Moby project](https://github.com/moby/profiles), licensed under Apache-2.0 (see `NOTICE`).
 
 To check the sandbox, open `chrome://sandbox` in Chromium.
 
@@ -244,6 +246,17 @@ Existing homes receive the app's new files on the next start, but not changes to
 - **Homes are tied to the path:** renaming or moving a directory gives it a new, empty home. The old volume stays until you delete it.
 - **Pruning can delete homes:** `docker volume prune -a` removes all unused named volumes, including the homes of stopped containers.
 
+## Security
+
+isolde is for running your own tools on your own machine. It keeps projects apart from each other, but it isn't a strong security boundary.
+
+- **The password is visible on the host:** `RDP_PASSWORD` is stored in the container's settings, so anyone who can run `docker inspect` can read it. Anyone with Docker access can control the host anyway, but don't reuse a password from elsewhere.
+- **The password also unlocks `sudo`:** the `dev` user has full root access inside the container.
+- **Programs can change your project:** anything running in the container, including Claude Code, can read and change the mounted project directory and that project's home, and has full network access.
+- **Ports are local only:** RDP, and Chromium's debugging port if you open it, can only be reached from the host. xrdp uses a self-signed certificate, so your RDP client will warn about it. For remote access, use an SSH tunnel as described below.
+- **Chromium's sandbox depends on the seccomp profile:** see [Chromium sandbox](#chromium-sandbox). If you use logged-in portals with Claude Code, read [Risks](#risks).
+- **tmux passes control sequences through:** see [tmux](#tmux).
+
 ## Remote access
 
 The RDP port is bound to `127.0.0.1`, so it can only be reached from the host. To connect from another machine, use an SSH tunnel instead of exposing the port:
@@ -253,3 +266,7 @@ ssh -L 3389:127.0.0.1:<port> user@host
 ```
 
 Then connect your RDP client to `127.0.0.1:3389`.
+
+## License
+
+Apache License 2.0. See `LICENSE` and `NOTICE`.

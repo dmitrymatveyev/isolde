@@ -1,0 +1,9 @@
+isolde
+Copyright 2026 Dmitry Matveyev
+
+This product is licensed under the Apache License, Version 2.0. See LICENSE.
+
+seccomp_profile.json is derived from Docker's default seccomp profile in the
+Moby project (https://github.com/moby/profiles), which is licensed under the
+Apache License, Version 2.0. It was modified by adding one rule, marked with an
+"isolde:" comment, that allows the clone, setns and unshare system calls.

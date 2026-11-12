@@ -1,0 +1,4 @@
+# Only send the files the Dockerfile copies.
+*
+!entrypoint.sh
+!rootfs/
