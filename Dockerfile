@@ -27,7 +27,7 @@ COPY rootfs/ /
 
 # kitty, Node.js, and the tools Claude Code commonly uses
 RUN apt-get update && apt-get install -y \
-      kitty kitty-terminfo curl ca-certificates git gh ripgrep fd-find jq unzip less \
+      kitty kitty-terminfo ncurses-term tmux curl ca-certificates git gh ripgrep fd-find jq unzip less \
       openssh-client procps python3 build-essential \
     && update-alternatives --install /usr/bin/x-terminal-emulator \
        x-terminal-emulator /usr/bin/kitty 100 \

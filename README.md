@@ -139,9 +139,21 @@ Docker fills a new, empty volume from the image's `/home/dev`. After that, `entr
 | Chromium | The default browser, using the copy installed by Playwright. Run `chromium` or use the applications menu. |
 | Playwright | Node.js 24 with a global `playwright` command. To use a different version, change `PLAYWRIGHT_VERSION` with `--build-arg`. |
 
-Common tools are also installed: `git`, `gh`, `ripgrep`, `fd-find` (run as `fdfind`), `jq`, `curl`, `unzip`, `openssh-client`, `python3` and `build-essential`.
+Common tools are also installed: `git`, `gh`, `ripgrep`, `fd-find` (run as `fdfind`), `jq`, `curl`, `unzip`, `tmux`, `openssh-client`, `python3` and `build-essential`.
 
 If a project pins a different Playwright version, run `npx playwright install chromium` in that project. Those browsers are lost when the container stops, so you'd need to install them again. To avoid this, build the image with the project's version.
+
+### tmux
+
+`/etc/tmux.conf` sets tmux up for Claude Code:
+
+- **Color:** full color stays on inside tmux, including Claude Code's selection highlighting.
+- **Shift+Enter:** tmux passes Shift+Enter through separately from Enter, so Claude Code inserts a newline. Ctrl+J also inserts a newline in any terminal.
+- **Notifications:** `allow-passthrough` and `focus-events` let Claude Code's notifications reach kitty. To turn them on, set `preferredNotifChannel` to `"kitty"` with `/config` or in `~/.claude/settings.json`, once per project directory. A pane in a tmux window you aren't viewing doesn't send notifications.
+
+`allow-passthrough` lets any program in tmux send control sequences straight to your terminal, not just Claude Code. Be careful displaying untrusted output in tmux, such as printing a downloaded file.
+
+tmux sessions survive closing `isolde shell` or disconnecting from RDP, so you can reattach with `tmux attach`. They end when the container stops.
 
 ## Chromium sandbox
 
