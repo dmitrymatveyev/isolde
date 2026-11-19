@@ -49,6 +49,19 @@ RUN npm install -g @anthropic-ai/claude-code "playwright@$PLAYWRIGHT_VERSION" \
     && chown -R dev:dev /opt/ms-playwright \
     && rm -rf /var/lib/apt/lists/*
 
+# Google Chrome, for the Claude in Chrome extension. Google only publishes this
+# package for amd64, so other architectures skip it and keep just Chromium.
+# The package also adds Google's apt repository and signing key.
+RUN if [ "$(dpkg --print-architecture)" = amd64 ]; then \
+      curl -fsSLo /tmp/google-chrome.deb \
+        https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+      && apt-get update \
+      && apt-get install -y /tmp/google-chrome.deb \
+      && rm -rf /tmp/google-chrome.deb /var/lib/apt/lists/*; \
+    else \
+      echo "Skipping Google Chrome: no package for $(dpkg --print-architecture)"; \
+    fi
+
 # Install other apps here. Prefer system paths, and set PATH in /etc/profile.d.
 # Apps that must install into ~ should run as the dev user:
 #   USER dev

@@ -139,6 +139,7 @@ Docker fills a new, empty volume from the image's `/home/dev`. After that, `entr
 | kitty | The default terminal. It uses software rendering because RDP has no GPU. `xfce4-terminal` is also installed as a fallback. |
 | Claude Code | Installed with npm. Run `claude` and log in. Login is stored in the home, so you log in once per project directory. To update it, see [Update Claude Code](#update-claude-code). |
 | Chromium | The default browser, using the copy installed by Playwright. Run `chromium` or use the applications menu. |
+| Google Chrome | For the Claude in Chrome extension. Run `google-chrome` or use the applications menu. Only installed on amd64 hosts, because Google doesn't publish the package for other architectures. To update it, rebuild with `--no-cache --pull`, as for [Claude Code](#update-claude-code). See [Using Claude in Chrome](#using-claude-in-chrome). |
 | Playwright | Node.js 24 with a global `playwright` command. To use a different version, change `PLAYWRIGHT_VERSION` with `--build-arg`. |
 
 Common tools are also installed: `git`, `gh`, `ripgrep`, `fd-find` (run as `fdfind`), `jq`, `curl`, `unzip`, `tmux`, `openssh-client`, `python3` and `build-essential`.
@@ -214,6 +215,26 @@ To work without a visible window, Playwright can save a login to a file with `st
 - **Open debugging port:** anything running in the container can control the browser while the port is open, so close the window when you've finished.
 - **Saved logins:** the profile is stored in the project's home volume, so anyone with access to the Docker host could read those sessions.
 - **Portal rules:** some portals prohibit or block automated access, so check their terms.
+
+## Using Claude in Chrome
+
+Claude in Chrome is a Chrome extension that Claude Code can use to control the browser. It needs a paid Claude plan, and Claude Code has to be logged in with `/login` using the same account as the extension. An API key doesn't work.
+
+1. In the RDP session, start Google Chrome from the applications menu or with `google-chrome`.
+2. Install the [Claude extension](https://chromewebstore.google.com/detail/claude/fcoeoabgfenejglbffodgkkbkcdhcgfn) from the Chrome Web Store, and sign in to it with your Claude account.
+3. In a terminal, start Claude Code with the integration:
+
+   ```bash
+   claude --chrome
+   ```
+
+   The first time, Claude Code adds a file in `~/.config/google-chrome/NativeMessagingHosts/` so that Chrome can reach it. If Claude Code reports that the extension isn't connected, restart Chrome.
+
+4. Run `/chrome` in Claude Code to check that the status is `Enabled` and the extension is `Installed`.
+
+The Chrome profile, the extension and its login are stored in the home, so you set this up once per project directory.
+
+Chrome runs with its sandbox, which relies on the same seccomp profile as Chromium. See [Chromium sandbox](#chromium-sandbox). The extension gives Claude Code the same access to your logged-in sites as Playwright MCP does, so the [Risks](#risks) above apply here too.
 
 ## Adding apps
 
