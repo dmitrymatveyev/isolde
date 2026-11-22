@@ -67,9 +67,17 @@ RUN if [ "$(dpkg --print-architecture)" = amd64 ]; then \
 # needs ansible-core 2.17 or later, so install 4.x where all users can see it.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ansible pwgen just \
-    && rm -rf /var/lib/apt/lists/* \
-    && ansible-galaxy collection install -p /usr/share/ansible/collections \
-       'community.docker:>=4.0.0,<5.0.0'
+    && rm -rf /var/lib/apt/lists/*
+
+# Ansible Galaxy downloads often time out, so wait longer and retry.
+RUN for attempt in 1 2 3; do \
+      ansible-galaxy collection install --timeout 120 \
+        -p /usr/share/ansible/collections 'community.docker:>=4.0.0,<5.0.0' \
+        && exit 0; \
+      echo "Galaxy download failed (attempt $attempt), retrying in 10 seconds"; \
+      sleep 10; \
+    done; \
+    exit 1
 
 # Install other apps here. Prefer system paths, and set PATH in /etc/profile.d.
 # Apps that must install into ~ should run as the dev user:
