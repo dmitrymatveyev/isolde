@@ -153,7 +153,7 @@ If a project pins a different Playwright version, run `npx playwright install ch
 `/etc/tmux.conf` sets tmux up for Claude Code:
 
 - **Color:** full color stays on inside tmux, including Claude Code's selection highlighting.
-- **Shift+Enter:** tmux passes Shift+Enter through separately from Enter, so Claude Code inserts a newline. Ctrl+J also inserts a newline in any terminal.
+- **Newlines:** in tmux, Shift+Enter sends the message, because tmux can't tell it apart from Enter in kitty. Use Ctrl+J to insert a newline instead.
 - **Notifications:** `allow-passthrough` and `focus-events` let Claude Code's notifications reach kitty. To turn them on, set `preferredNotifChannel` to `"kitty"` with `/config` or in `~/.claude/settings.json`, once per project directory. A pane in a tmux window you aren't viewing doesn't send notifications.
 
 `allow-passthrough` lets any program in tmux send control sequences straight to your terminal, not just Claude Code. Be careful displaying untrusted output in tmux, such as printing a downloaded file.
