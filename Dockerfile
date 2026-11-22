@@ -62,6 +62,15 @@ RUN if [ "$(dpkg --print-architecture)" = amd64 ]; then \
       echo "Skipping Google Chrome: no package for $(dpkg --print-architecture)"; \
     fi
 
+# Ansible, for managing servers such as matrix-docker-ansible-deploy setups.
+# Ubuntu's community.docker 3.7.0 doesn't work with Debian 13 hosts, and 5.x
+# needs ansible-core 2.17 or later, so install 4.x where all users can see it.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ansible pwgen just \
+    && rm -rf /var/lib/apt/lists/* \
+    && ansible-galaxy collection install -p /usr/share/ansible/collections \
+       'community.docker:>=4.0.0,<5.0.0'
+
 # Install other apps here. Prefer system paths, and set PATH in /etc/profile.d.
 # Apps that must install into ~ should run as the dev user:
 #   USER dev

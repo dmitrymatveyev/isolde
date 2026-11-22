@@ -144,6 +144,8 @@ Docker fills a new, empty volume from the image's `/home/dev`. After that, `entr
 
 Common tools are also installed: `git`, `gh`, `ripgrep`, `fd-find` (run as `fdfind`), `jq`, `curl`, `unzip`, `tmux`, `openssh-client`, `python3` and `build-essential`.
 
+For managing servers, `ansible`, `pwgen` and `just` are installed too. The image also includes the `community.docker` Ansible collection at version 4.x, in `/usr/share/ansible/collections`, because the 3.7.0 version from Ubuntu doesn't work with Debian 13 hosts. A collection installed in `~/.ansible/collections` takes priority over it.
+
 If a project pins a different Playwright version, run `npx playwright install chromium` in that project. Those browsers are lost when the container stops, so you'd need to install them again. To avoid this, build the image with the project's version.
 
 ### tmux
