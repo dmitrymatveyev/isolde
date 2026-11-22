@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Start isolde for the current directory, open the desktop in Remmina, and
+# open a shell in the container.
+#
+# Usage: RDP_PASSWORD=... ./isolde-remmina
+set -euo pipefail
+
+if [ $# -gt 0 ]; then
+  echo "usage: RDP_PASSWORD=... $0" >&2
+  exit 2
+fi
+: "${RDP_PASSWORD:?export RDP_PASSWORD first}"
+
+for cmd in isolde remmina setsid openssl base64 od; do
+  command -v "$cmd" >/dev/null || { echo "$cmd not found" >&2; exit 1; }
+done
+
+# Remmina decrypts the password in a URI with the secret in its preferences,
+# so encrypt it the same way: Triple DES in CBC mode, with the first 24 bytes
+# of the secret as the key and the next 8 as the IV, and the password padded
+# with zero bytes to the next multiple of 8. `remmina --encrypt-password`
+# does the same, but hangs when Remmina is already running.
+pref="${XDG_CONFIG_HOME:-$HOME/.config}/remmina/remmina.pref"
+secret=$(sed -n 's/^secret=//p' "$pref" 2>/dev/null | head -n 1) || true
+if [ -z "$secret" ]; then
+  echo "no secret in $pref: start Remmina once, then try again" >&2
+  exit 1
+fi
+secret_hex=$(base64 -d <<<"$secret" 2>/dev/null | head -c 32 | od -An -v -tx1 | tr -d ' \n') || true
+if [ ${#secret_hex} -ne 64 ]; then
+  echo "the secret in $pref isn't valid: expected at least 32 bytes of base64" >&2
+  exit 1
+fi
+length=$(printf %s "$RDP_PASSWORD" | wc -c)
+encrypted=$( { printf %s "$RDP_PASSWORD"; head -c $((8 - length % 8)) /dev/zero; } |
+  openssl enc -des-ede3-cbc -nopad -K "${secret_hex:0:48}" -iv "${secret_hex:48:16}" |
+  base64 -w0)
+
+out=$(isolde)
+echo "$out"
+addr=$(sed -n 's/.* RDP at \([^ ]*\) .*/\1/p' <<<"$out")
+[ -n "$addr" ] || { echo "couldn't find the RDP address" >&2; exit 1; }
+
+# Don't percent-encode the URI: Remmina treats anything after a % as the
+# connection name. Detach Remmina so it keeps running after the shell closes.
+setsid -f remmina -c "rdp://dev:$encrypted@$addr" >/dev/null 2>&1
+
+exec isolde shell

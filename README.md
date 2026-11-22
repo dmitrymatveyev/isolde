@@ -60,6 +60,28 @@ If the container isn't running, this starts it first, which requires `RDP_PASSWO
 
 The shell uses your terminal's `TERM` and `COLORTERM` settings, so colors match your terminal.
 
+### Open Remmina and a shell together
+
+If you use Remmina, `isolde-remmina` starts the container, opens the desktop in Remmina, and then opens `isolde shell`. Put it on your `PATH` next to `isolde`:
+
+```bash
+ln -s "$PWD/isolde-remmina" ~/.local/bin/isolde-remmina
+```
+
+Then run it from the project directory:
+
+```bash
+cd ~/projects/foo
+export RDP_PASSWORD='choose-something'
+isolde-remmina
+```
+
+It needs `openssl` on the host, and Remmina must have been started at least once, because the script encrypts the password with the key Remmina keeps in `~/.config/remmina/remmina.pref`.
+
+The password only takes effect when the container starts. If the container is already running with a different password, Remmina's login fails.
+
+Remmina may ask you to accept xrdp's certificate again whenever the port changes, which can happen each time the container starts.
+
 ### Stop a container
 
 Container names are also printed by `docker ps`.
