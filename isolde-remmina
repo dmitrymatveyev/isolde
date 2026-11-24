@@ -42,7 +42,8 @@ addr=$(sed -n 's/.* RDP at \([^ ]*\) .*/\1/p' <<<"$out")
 [ -n "$addr" ] || { echo "couldn't find the RDP address" >&2; exit 1; }
 
 # Don't percent-encode the URI: Remmina treats anything after a % as the
-# connection name. Detach Remmina so it keeps running after the shell closes.
-setsid -f remmina -c "rdp://dev:$encrypted@$addr" >/dev/null 2>&1
+# connection name. Detach Remmina so it keeps running after the shell closes,
+# and don't leave it holding the terminal, or the terminal can't close.
+setsid -f remmina -c "rdp://dev:$encrypted@$addr" </dev/null >/dev/null 2>&1
 
 exec isolde shell
